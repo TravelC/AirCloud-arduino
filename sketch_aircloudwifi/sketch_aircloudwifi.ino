@@ -1,10 +1,10 @@
 /*
-William Ferrell
+  William Ferrell
 */
 
 
 #if !( defined(ESP8266) ||  defined(ESP32) )
-  #error This code is intended to run on the ESP8266 or ESP32 platform! Please check your Tools->Board setting.
+#error This code is intended to run on the ESP8266 or ESP32 platform! Please check your Tools->Board setting.
 #endif
 
 #define ESP_ASYNC_WIFIMANAGER_VERSION_MIN_TARGET     "ESPAsync_WiFiManager v1.9.2"
@@ -16,82 +16,82 @@ William Ferrell
 
 //Ported to ESP32
 #ifdef ESP32
-  #include <esp_wifi.h>
-  #include <WiFi.h>
-  #include <WiFiClient.h>
+#include <esp_wifi.h>
+#include <WiFi.h>
+#include <WiFiClient.h>
 
-  // From v1.1.1
-  #include <WiFiMulti.h>
-  WiFiMulti wifiMulti;
+// From v1.1.1
+#include <WiFiMulti.h>
+WiFiMulti wifiMulti;
 
-  // LittleFS has higher priority than SPIFFS
-  #if ( ARDUINO_ESP32C3_DEV )
-    // Currently, ESP32-C3 only supporting SPIFFS and EEPROM. Will fix to support LittleFS
-    #define USE_LITTLEFS          false
-    #define USE_SPIFFS            true
-  #else
-    #define USE_LITTLEFS    true
-    #define USE_SPIFFS      false
-  #endif
+// LittleFS has higher priority than SPIFFS
+#if ( ARDUINO_ESP32C3_DEV )
+// Currently, ESP32-C3 only supporting SPIFFS and EEPROM. Will fix to support LittleFS
+#define USE_LITTLEFS          false
+#define USE_SPIFFS            true
+#else
+#define USE_LITTLEFS    true
+#define USE_SPIFFS      false
+#endif
 
-  #if USE_LITTLEFS
-    // Use LittleFS
-    #include "FS.h"
+#if USE_LITTLEFS
+// Use LittleFS
+#include "FS.h"
 
-    // The library has been merged into esp32 core release 1.0.6
-    #include <LITTLEFS.h>             // https://github.com/lorol/LITTLEFS
-    
-    FS* filesystem =      &LITTLEFS;
-    #define FileFS        LITTLEFS
-    #define FS_Name       "LittleFS"
-  #elif USE_SPIFFS
-    #include <SPIFFS.h>
-    FS* filesystem =      &SPIFFS;
-    #define FileFS        SPIFFS
-    #define FS_Name       "SPIFFS"
-  #else
-    // +Use FFat
-    #include <FFat.h>
-    FS* filesystem =      &FFat;
-    #define FileFS        FFat
-    #define FS_Name       "FFat"
-  #endif
-  //////
+// The library has been merged into esp32 core release 1.0.6
+#include <LITTLEFS.h>             // https://github.com/lorol/LITTLEFS
 
-  #define ESP_getChipId()   ((uint32_t)ESP.getEfuseMac())
+FS* filesystem =      &LITTLEFS;
+#define FileFS        LITTLEFS
+#define FS_Name       "LittleFS"
+#elif USE_SPIFFS
+#include <SPIFFS.h>
+FS* filesystem =      &SPIFFS;
+#define FileFS        SPIFFS
+#define FS_Name       "SPIFFS"
+#else
+// +Use FFat
+#include <FFat.h>
+FS* filesystem =      &FFat;
+#define FileFS        FFat
+#define FS_Name       "FFat"
+#endif
+//////
 
-  #define LED_BUILTIN       2
-  #define LED_ON            HIGH
-  #define LED_OFF           LOW
+#define ESP_getChipId()   ((uint32_t)ESP.getEfuseMac())
+
+#define LED_BUILTIN       2
+#define LED_ON            HIGH
+#define LED_OFF           LOW
 
 #else
 
-  #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
-  //needed for library
-  #include <DNSServer.h>
+#include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
+//needed for library
+#include <DNSServer.h>
 
-  // From v1.1.1
-  #include <ESP8266WiFiMulti.h>
-  ESP8266WiFiMulti wifiMulti;
+// From v1.1.1
+#include <ESP8266WiFiMulti.h>
+ESP8266WiFiMulti wifiMulti;
 
-  #define USE_LITTLEFS      true
-  
-  #if USE_LITTLEFS
-    #include <LittleFS.h>
-    FS* filesystem =      &LittleFS;
-    #define FileFS        LittleFS
-    #define FS_Name       "LittleFS"
-  #else
-    FS* filesystem =      &SPIFFS;
-    #define FileFS        SPIFFS
-    #define FS_Name       "SPIFFS"
-  #endif
-  //////
-  
-  #define ESP_getChipId()   (ESP.getChipId())
-  
-  #define LED_ON      LOW
-  #define LED_OFF     HIGH
+#define USE_LITTLEFS      true
+
+#if USE_LITTLEFS
+#include <LittleFS.h>
+FS* filesystem =      &LittleFS;
+#define FileFS        LittleFS
+#define FS_Name       "LittleFS"
+#else
+FS* filesystem =      &SPIFFS;
+#define FileFS        SPIFFS
+#define FS_Name       "SPIFFS"
+#endif
+//////
+
+#define ESP_getChipId()   (ESP.getChipId())
+
+#define LED_ON      LOW
+#define LED_OFF     HIGH
 #endif
 
 // These defines must be put before #include <ESP_DoubleResetDetector.h>
@@ -101,41 +101,41 @@ William Ferrell
 // Otherwise, library will use default EEPROM storage
 #ifdef ESP32
 
-  // These defines must be put before #include <ESP_DoubleResetDetector.h>
-  // to select where to store DoubleResetDetector's variable.
-  // For ESP32, You must select one to be true (EEPROM or SPIFFS)
-  // Otherwise, library will use default EEPROM storage
-  #if USE_LITTLEFS
-    #define ESP_DRD_USE_LITTLEFS    true
-    #define ESP_DRD_USE_SPIFFS      false
-    #define ESP_DRD_USE_EEPROM      false
-  #elif USE_SPIFFS
-    #define ESP_DRD_USE_LITTLEFS    false
-    #define ESP_DRD_USE_SPIFFS      true
-    #define ESP_DRD_USE_EEPROM      false
-  #else
-    #define ESP_DRD_USE_LITTLEFS    false
-    #define ESP_DRD_USE_SPIFFS      false
-    #define ESP_DRD_USE_EEPROM      true
-  #endif
+// These defines must be put before #include <ESP_DoubleResetDetector.h>
+// to select where to store DoubleResetDetector's variable.
+// For ESP32, You must select one to be true (EEPROM or SPIFFS)
+// Otherwise, library will use default EEPROM storage
+#if USE_LITTLEFS
+#define ESP_DRD_USE_LITTLEFS    true
+#define ESP_DRD_USE_SPIFFS      false
+#define ESP_DRD_USE_EEPROM      false
+#elif USE_SPIFFS
+#define ESP_DRD_USE_LITTLEFS    false
+#define ESP_DRD_USE_SPIFFS      true
+#define ESP_DRD_USE_EEPROM      false
+#else
+#define ESP_DRD_USE_LITTLEFS    false
+#define ESP_DRD_USE_SPIFFS      false
+#define ESP_DRD_USE_EEPROM      true
+#endif
 
 #else //ESP8266
 
-  // For DRD
-  // These defines must be put before #include <ESP_DoubleResetDetector.h>
-  // to select where to store DoubleResetDetector's variable.
-  // For ESP8266, You must select one to be true (RTC, EEPROM, SPIFFS or LITTLEFS)
-  // Otherwise, library will use default EEPROM storage
-  #if USE_LITTLEFS
-    #define ESP_DRD_USE_LITTLEFS    true
-    #define ESP_DRD_USE_SPIFFS      false
-  #else
-    #define ESP_DRD_USE_LITTLEFS    false
-    #define ESP_DRD_USE_SPIFFS      true
-  #endif
-  
-  #define ESP_DRD_USE_EEPROM      false
-  #define ESP8266_DRD_USE_RTC     false
+// For DRD
+// These defines must be put before #include <ESP_DoubleResetDetector.h>
+// to select where to store DoubleResetDetector's variable.
+// For ESP8266, You must select one to be true (RTC, EEPROM, SPIFFS or LITTLEFS)
+// Otherwise, library will use default EEPROM storage
+#if USE_LITTLEFS
+#define ESP_DRD_USE_LITTLEFS    true
+#define ESP_DRD_USE_SPIFFS      false
+#else
+#define ESP_DRD_USE_LITTLEFS    false
+#define ESP_DRD_USE_SPIFFS      true
+#endif
+
+#define ESP_DRD_USE_EEPROM      false
+#define ESP8266_DRD_USE_RTC     false
 #endif
 
 #define DOUBLERESETDETECTOR_DEBUG       true  //false
@@ -409,7 +409,7 @@ bool loadFileFSConfigFile()
 
           if (json["purpleair_id"])
             strncpy(purpleair_id, json["purpleair_id"], sizeof(purpleair_id));
-         
+
         }
 
         //serializeJson(json, Serial);
@@ -560,15 +560,15 @@ uint8_t connectMultiWiFi()
 #if ESP32
   // For ESP32, this better be 0 to shorten the connect time.
   // For ESP32-S2/C3, must be > 500
-  #if ( USING_ESP32_S2 || USING_ESP32_C3 )
-    #define WIFI_MULTI_1ST_CONNECT_WAITING_MS           500L
-  #else
-    // For ESP32 core v1.0.6, must be >= 500
-    #define WIFI_MULTI_1ST_CONNECT_WAITING_MS           800L
-  #endif
+#if ( USING_ESP32_S2 || USING_ESP32_C3 )
+#define WIFI_MULTI_1ST_CONNECT_WAITING_MS           500L
+#else
+  // For ESP32 core v1.0.6, must be >= 500
+#define WIFI_MULTI_1ST_CONNECT_WAITING_MS           800L
+#endif
 #else
   // For ESP8266, this better be 2200 to enable connect the 1st time
-  #define WIFI_MULTI_1ST_CONNECT_WAITING_MS             2200L
+#define WIFI_MULTI_1ST_CONNECT_WAITING_MS             2200L
 #endif
 
 #define WIFI_MULTI_CONNECT_WAITING_MS                   500L
@@ -631,12 +631,12 @@ uint8_t connectMultiWiFi()
 
     // To avoid unnecessary DRD
     drd->loop();
-  
-#if ESP8266      
+
+#if ESP8266
     ESP.reset();
 #else
     ESP.restart();
-#endif  
+#endif
   }
 
   return status;
@@ -648,9 +648,9 @@ void printLocalTime()
 {
 #if ESP8266
   static time_t now;
-  
+
   now = time(nullptr);
-  
+
   if ( now > 1451602800 )
   {
     Serial.print("Local Date/Time: ");
@@ -661,7 +661,7 @@ void printLocalTime()
 
   getLocalTime( &timeinfo );
 
-  // Valid only if year > 2000. 
+  // Valid only if year > 2000.
   // You can get from timeinfo : tm_year, tm_mon, tm_mday, tm_hour, tm_min, tm_sec
   if (timeinfo.tm_year > 100 )
   {
@@ -694,7 +694,7 @@ void heartBeatPrint()
   {
     Serial.print(F(" "));
   }
-#endif  
+#endif
 }
 
 void check_WiFi()
@@ -716,10 +716,10 @@ void check_status()
 #define WIFICHECK_INTERVAL    1000L
 
 #if USE_ESP_WIFIMANAGER_NTP
-  #define HEARTBEAT_INTERVAL    60000L
+#define HEARTBEAT_INTERVAL    60000L
 #else
-  #define HEARTBEAT_INTERVAL    10000L
-#endif  
+#define HEARTBEAT_INTERVAL    10000L
+#endif
 
   current_millis = millis();
 
@@ -741,7 +741,7 @@ void check_status()
 int calcChecksum(uint8_t* address, uint16_t sizeToCalc)
 {
   uint16_t checkSum = 0;
-  
+
   for (uint16_t index = 0; index < sizeToCalc; index++)
   {
     checkSum += * ( ( (byte*) address ) + index);
@@ -775,10 +775,10 @@ bool loadConfigData()
     if ( WM_config.checksum != calcChecksum( (uint8_t*) &WM_config, sizeof(WM_config) - sizeof(WM_config.checksum) ) )
     {
       LOGERROR(F("WM_config checksum wrong"));
-      
+
       return false;
     }
-    
+
     // New in v1.4.0
     displayIPConfigStruct(WM_STA_IPconfig);
     //////
@@ -801,7 +801,7 @@ void saveConfigData()
   if (file)
   {
     WM_config.checksum = calcChecksum( (uint8_t*) &WM_config, sizeof(WM_config) - sizeof(WM_config.checksum) );
-    
+
     file.write((uint8_t*) &WM_config, sizeof(WM_config));
 
     displayIPConfigStruct(WM_STA_IPconfig);
@@ -830,16 +830,16 @@ String httpGETRequest(const char* serverName) {
 
   // set the timeout
   http.setTimeout(10000);
-  
+
   // Send HTTP POST request
   int httpResponseCode = http.GET();
 
   Serial.println(httpResponseCode);
 
   Serial.println( http.errorToString(httpResponseCode) );
-  String payload = "{}"; 
-  
-  if (httpResponseCode>0) {
+  String payload = "{}";
+
+  if (httpResponseCode > 0) {
     Serial.print("HTTP Response code: ");
     Serial.println(httpResponseCode);
     payload = http.getString();
@@ -862,14 +862,14 @@ String httpGETRequest(const char* serverName) {
 
 void breathe()
 {
-  float smoothness_pts = 500;//larger=slower change in brightness  
-  
+  float smoothness_pts = 500;//larger=slower change in brightness
+
   float gamma = 0.14; // affects the width of peak (more or less darkness)
   float beta = 0.5; // shifts the gaussian to be symmetric
   float topPWM = 50.0; // this is the top value that could be hit.
   Serial.println("Breathing");
-  for (int ii=0;ii<smoothness_pts;ii++){
-    float pwm_val = topPWM*(exp(-(pow(((ii/smoothness_pts)-beta)/gamma,2.0))/2.0));
+  for (int ii = 0; ii < smoothness_pts; ii++) {
+    float pwm_val = topPWM * (exp(-(pow(((ii / smoothness_pts) - beta) / gamma, 2.0)) / 2.0));
     if (pwm_val < 8.0) {
       pwm_val = 8.0;
     }
@@ -881,21 +881,21 @@ void breathe()
 
   }
   Serial.println("Breathing");
-  for (int ii=0;ii<smoothness_pts;ii++){
-    float pwm_val = topPWM*(exp(-(pow(((ii/smoothness_pts)-beta)/gamma,2.0))/2.0));
+  for (int ii = 0; ii < smoothness_pts; ii++) {
+    float pwm_val = topPWM * (exp(-(pow(((ii / smoothness_pts) - beta) / gamma, 2.0)) / 2.0));
     if (pwm_val < 8.0) {
       pwm_val = 10.0;
-    }        
+    }
     FastLED.setBrightness(pwm_val);
     FastLED.show();
     delay(5);
   }
   Serial.println("Breathing");
-  for (int ii=0;ii<smoothness_pts;ii++){
-    float pwm_val = topPWM*(exp(-(pow(((ii/smoothness_pts)-beta)/gamma,2.0))/2.0));
+  for (int ii = 0; ii < smoothness_pts; ii++) {
+    float pwm_val = topPWM * (exp(-(pow(((ii / smoothness_pts) - beta) / gamma, 2.0)) / 2.0));
     if (pwm_val < 8.0) {
       pwm_val = 8.0;
-    }        
+    }
     FastLED.setBrightness(pwm_val);
     FastLED.show();
     delay(5);
@@ -929,7 +929,7 @@ void aircloudDisplay()
       Serial.println("SensorReadings are TIMEOUT sp we will attempt to re-fetch");
       Serial.println("TimeoutCount is acceptable");
       timerDelay = 5000;
-      return;      
+      return;
     }
   }
 
@@ -1018,164 +1018,173 @@ void aircloudDisplay()
     }
     FastLED.show();
     delay(100);
-    // Now set a color and after each we show
-    int count_remaining = aircloud_aqi;
 
-    int counting_up = 0;
-    for (int i = NUM_LEDS; i >= 0; i--) {
-      Serial.println(i);
-      // Turn the LED on, then pause
-      if (count_remaining >= 0) {
-        if (counting_up < 50) {
-          int mappedValue = map(counting_up,0,50,96,64);
-          Serial.println("counting_up mappedValue");
+    leds[0] = CRGB::Red;
+    leds[NUM_LEDS - 1] = CRGB::Green;
+    FastLED.show();
+
+
+
+    // Now set a color and after each we show
+    //    int count_remaining = aircloud_aqi;
+
+    //    int counting_up = 0;
+    //    for (int i = NUM_LEDS; i >= 0; i--) {
+    //      Serial.println(i);
+    //      // Turn the LED on, then pause
+    //      if (count_remaining >= 0) {
+    //        if (counting_up < 50) {
+    //          int mappedValue = map(counting_up,0,50,96,64);
+    //          Serial.println("counting_up mappedValue");
+    //          Serial.println(mappedValue);
+    //          leds[i].setHSV( mappedValue, 255, 255);
+    //        }
+    //        else if (counting_up < 100) {
+    //          int mappedValue = map(counting_up,50,100,64,32);
+    //          Serial.println("counting_up mappedValue");
+    //          Serial.println(mappedValue);
+    //          leds[i].setHSV( mappedValue, 255, 255);
+    //        }
+    //        else if (counting_up < 150) {
+    //          int mappedValue = map(counting_up,100,150,32,0);
+    //          Serial.println("counting_up mappedValue");
+    //          Serial.println(mappedValue);
+    //          leds[i].setHSV( mappedValue, 255, 255);
+    //        }
+    //        else if (counting_up < 200) {
+    //          int mappedValue = map(counting_up,150,200,255,224);
+    //          Serial.println("counting_up mappedValue");
+    //          Serial.println(mappedValue);
+    //          leds[i].setHSV( mappedValue, 255, 255);
+    //        }
+    //        else if (counting_up < 300) {
+    //          int mappedValue = map(counting_up,200,300,224,192);
+    //          Serial.println("counting_up mappedValue");
+    //          Serial.println(mappedValue);
+    //          leds[i].setHSV( mappedValue, 255, 255);
+    //        }
+    //        else if (counting_up >= 300) {
+    //          leds[i] = CRGB::DarkViolet;
+    //        }
+    //        FastLED.show();
+    //        delay(500);
+    //        counting_up = counting_up + 1;
+    //        if (i == 0) {
+    //          i = NUM_LEDS;
+    //        }
+    //      }
+    //      count_remaining = count_remaining - 1;
+    //    }
+    /*
+        delay(10000);
+        if (aircloud_aqi < 50) {
+          Serial.println("MAPPING < 50");
+          int mappedValue = map(aircloud_aqi,0,50,96,64);
           Serial.println(mappedValue);
-          leds[i].setHSV( mappedValue, 255, 255);
+          for (int i = 0; i < NUM_LEDS; i++) {
+              leds[i].setHSV( mappedValue, 255, 255);
+          }
         }
-        else if (counting_up < 100) {
-          int mappedValue = map(counting_up,50,100,64,32);
-          Serial.println("counting_up mappedValue");
+        else if (aircloud_aqi < 100) {
+          Serial.println("MAPPING < 100");
+          int mappedValue = map(aircloud_aqi,50,100,64,32);
           Serial.println(mappedValue);
-          leds[i].setHSV( mappedValue, 255, 255);
+          for (int i = 0; i < NUM_LEDS; i++) {
+              leds[i].setHSV( mappedValue, 255, 255);
+          }
         }
-        else if (counting_up < 150) {
-          int mappedValue = map(counting_up,100,150,32,0);
-          Serial.println("counting_up mappedValue");
+        else if (aircloud_aqi < 150) {
+          Serial.println("MAPPING < 150");
+          int mappedValue = map(aircloud_aqi,100,150,32,0);
           Serial.println(mappedValue);
-          leds[i].setHSV( mappedValue, 255, 255);
+          for (int i = 0; i < NUM_LEDS; i++) {
+              leds[i].setHSV( mappedValue, 255, 255);
+          }
         }
-        else if (counting_up < 200) {
-          int mappedValue = map(counting_up,150,200,255,224);
-          Serial.println("counting_up mappedValue");
+        else if (aircloud_aqi < 200) {
+          Serial.println("MAPPING < 200");
+          int mappedValue = map(aircloud_aqi,150,200,255,224);
           Serial.println(mappedValue);
-          leds[i].setHSV( mappedValue, 255, 255);
+          for (int i = 0; i < NUM_LEDS; i++) {
+              leds[i].setHSV( mappedValue, 255, 255);
+          }
         }
-        else if (counting_up < 300) {
-          int mappedValue = map(counting_up,200,300,224,192);
-          Serial.println("counting_up mappedValue");
+        else if (aircloud_aqi < 300) {
+          Serial.println("MAPPING < 300");
+          int mappedValue = map(aircloud_aqi,200,300,224,192);
           Serial.println(mappedValue);
-          leds[i].setHSV( mappedValue, 255, 255);
+          for (int i = 0; i < NUM_LEDS; i++) {
+              leds[i].setHSV( mappedValue, 255, 255);
+          }
         }
-        else if (counting_up >= 300) {
-          leds[i] = CRGB::DarkViolet;
+        else if (aircloud_aqi < 400) {
+          Serial.println("MAPPING < 400");
+          for (int i = 0; i < NUM_LEDS; i++) {
+            leds[i] = CRGB::DarkViolet;
+          }
+          // Set the bottom row, white
+          for (int i = NUM_LEDS-14; i < NUM_LEDS; i++) {
+            leds[i] = CRGB::WhiteSmoke;
+          }
+        }
+        else if (aircloud_aqi >= 400) {
+          Serial.println("MAPPING >= 400");
+          for (int i = 0; i < NUM_LEDS; i++) {
+            leds[i] = CRGB::DarkViolet;
+          }
+          // Set the bottom row, white
+          for (int i = NUM_LEDS-14; i < NUM_LEDS; i++) {
+            leds[i] = CRGB::WhiteSmoke;
+          }
+          // Set the rest of the rim, white
+          leds[0] = CRGB::WhiteSmoke;
+          leds[1] = CRGB::WhiteSmoke;
+          leds[2] = CRGB::WhiteSmoke;
+          leds[5] = CRGB::WhiteSmoke;
+          leds[6] = CRGB::WhiteSmoke;
+          leds[11] = CRGB::WhiteSmoke;
+          leds[12] = CRGB::WhiteSmoke;
+          leds[19] = CRGB::WhiteSmoke;
+          leds[20] = CRGB::WhiteSmoke;
+          leds[21] = CRGB::WhiteSmoke;
+          leds[22] = CRGB::WhiteSmoke;
+          leds[30] = CRGB::WhiteSmoke;
+          leds[31] = CRGB::WhiteSmoke;
+          leds[43] = CRGB::WhiteSmoke;
+          leds[44] = CRGB::WhiteSmoke;
+          leds[45] = CRGB::WhiteSmoke;
+          leds[46] = CRGB::WhiteSmoke;
+          leds[62] = CRGB::WhiteSmoke;
+          leds[63] = CRGB::WhiteSmoke;
+          leds[80] = CRGB::WhiteSmoke;
+          leds[81] = CRGB::WhiteSmoke;
+          leds[98] = CRGB::WhiteSmoke;
+          leds[99] = CRGB::WhiteSmoke;
+          leds[116] = CRGB::WhiteSmoke;
+          leds[117] = CRGB::WhiteSmoke;
+          leds[134] = CRGB::WhiteSmoke;
+          leds[135] = CRGB::WhiteSmoke;
+          leds[152] = CRGB::WhiteSmoke;
+          leds[153] = CRGB::WhiteSmoke;
+          leds[168] = CRGB::WhiteSmoke;
+        }
+
+        leds3[0] = CRGB::Green;
+        leds4[0] = CRGB::Black;
+        Serial.println("Setting isBadData to 0");
+        isBadData = 0;
+        isTimeOutMax = 0;
+
+        if (aircloud_pqid != purpleairPQIDDone) {
+          Serial.println("They are NOT equal.");
+          leds3[0] = CRGB::Yellow;
         }
         FastLED.show();
-        delay(500);
-        counting_up = counting_up + 1;
-        if (i == 0) {
-          i = NUM_LEDS;
-        }
-      }
-      count_remaining = count_remaining - 1;
-    }
-    delay(10000);
-    if (aircloud_aqi < 50) {
-      Serial.println("MAPPING < 50");
-      int mappedValue = map(aircloud_aqi,0,50,96,64);
-      Serial.println(mappedValue);
-      for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i].setHSV( mappedValue, 255, 255);
-      }
-    }
-    else if (aircloud_aqi < 100) {
-      Serial.println("MAPPING < 100");
-      int mappedValue = map(aircloud_aqi,50,100,64,32);
-      Serial.println(mappedValue);
-      for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i].setHSV( mappedValue, 255, 255);
-      }
-    }
-    else if (aircloud_aqi < 150) {
-      Serial.println("MAPPING < 150");
-      int mappedValue = map(aircloud_aqi,100,150,32,0);
-      Serial.println(mappedValue);
-      for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i].setHSV( mappedValue, 255, 255);
-      }
-    }
-    else if (aircloud_aqi < 200) {
-      Serial.println("MAPPING < 200");
-      int mappedValue = map(aircloud_aqi,150,200,255,224);
-      Serial.println(mappedValue);
-      for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i].setHSV( mappedValue, 255, 255);
-      }
-    }
-    else if (aircloud_aqi < 300) {
-      Serial.println("MAPPING < 300");
-      int mappedValue = map(aircloud_aqi,200,300,224,192);
-      Serial.println(mappedValue);
-      for (int i = 0; i < NUM_LEDS; i++) {
-          leds[i].setHSV( mappedValue, 255, 255);
-      }
-    }
-    else if (aircloud_aqi < 400) {
-      Serial.println("MAPPING < 400");
-      for (int i = 0; i < NUM_LEDS; i++) {
-        leds[i] = CRGB::DarkViolet;
-      }
-      // Set the bottom row, white
-      for (int i = NUM_LEDS-14; i < NUM_LEDS; i++) {
-        leds[i] = CRGB::WhiteSmoke;
-      }
-    }
-    else if (aircloud_aqi >= 400) {
-      Serial.println("MAPPING >= 400");
-      for (int i = 0; i < NUM_LEDS; i++) {
-        leds[i] = CRGB::DarkViolet;
-      }
-      // Set the bottom row, white
-      for (int i = NUM_LEDS-14; i < NUM_LEDS; i++) {
-        leds[i] = CRGB::WhiteSmoke;
-      }
-      // Set the rest of the rim, white
-      leds[0] = CRGB::WhiteSmoke;
-      leds[1] = CRGB::WhiteSmoke;
-      leds[2] = CRGB::WhiteSmoke;
-      leds[5] = CRGB::WhiteSmoke;
-      leds[6] = CRGB::WhiteSmoke;
-      leds[11] = CRGB::WhiteSmoke;
-      leds[12] = CRGB::WhiteSmoke;
-      leds[19] = CRGB::WhiteSmoke;
-      leds[20] = CRGB::WhiteSmoke;
-      leds[21] = CRGB::WhiteSmoke;
-      leds[22] = CRGB::WhiteSmoke;
-      leds[30] = CRGB::WhiteSmoke;
-      leds[31] = CRGB::WhiteSmoke;
-      leds[43] = CRGB::WhiteSmoke;
-      leds[44] = CRGB::WhiteSmoke;
-      leds[45] = CRGB::WhiteSmoke;
-      leds[46] = CRGB::WhiteSmoke;
-      leds[62] = CRGB::WhiteSmoke;
-      leds[63] = CRGB::WhiteSmoke;
-      leds[80] = CRGB::WhiteSmoke;
-      leds[81] = CRGB::WhiteSmoke;
-      leds[98] = CRGB::WhiteSmoke;
-      leds[99] = CRGB::WhiteSmoke;
-      leds[116] = CRGB::WhiteSmoke;
-      leds[117] = CRGB::WhiteSmoke;
-      leds[134] = CRGB::WhiteSmoke;
-      leds[135] = CRGB::WhiteSmoke;
-      leds[152] = CRGB::WhiteSmoke;
-      leds[153] = CRGB::WhiteSmoke;
-      leds[168] = CRGB::WhiteSmoke;
-    }
-
-    leds3[0] = CRGB::Green;
-    leds4[0] = CRGB::Black;
-    Serial.println("Setting isBadData to 0");
-    isBadData = 0;
-    isTimeOutMax = 0;
-
-    if (aircloud_pqid != purpleairPQIDDone) {
-      Serial.println("They are NOT equal.");
-      leds3[0] = CRGB::Yellow;
-    }
-    FastLED.show();
-    delay(100);
-    breathe();
-    timerDelay = 60000*10; // This is where the refresh cycle is controlled.
-    Serial.println("Processed!");
+        delay(100);
+        breathe();
+        timerDelay = 60000*10; // This is where the refresh cycle is controlled.
+        Serial.println("Processed!");
+    */
   }
   else {
     Serial.println("Setting isBadData to 1");
@@ -1183,67 +1192,66 @@ void aircloudDisplay()
     isTimeOutMax = 0;
     leds3[0] = CRGB::Black;
     leds4[0] = CRGB::Red;
-    timerDelay = 5000;    
+    timerDelay = 5000;
   }
-
 }
 
 // Light up the main AirCloud LEDS and do a little warm up routine.
 void setupDance()
 {
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::Green;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::YellowGreen;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::Red;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::Purple;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::Maroon;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now iterate through the various colors.
+  for (int i = 0; i < NUM_LEDS; i++) {
+    // Turn the LED on, then pause
+    leds[i] = CRGB::Black;
+  }
+  FastLED.show();
+  delay(1000);
+  // Now do the fast move up
+  for (int j = 0; j < 256; j++) {
+    Serial.println(j);
+    for (int i = NUM_LEDS; i >= 0; i--) {
       // Turn the LED on, then pause
-      leds[i] = CRGB::Green;
+      leds[i].setHSV( j, 255, 255);
+      FastLED.show();
+      delay(10);
     }
-    FastLED.show();
-    delay(1000);
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Turn the LED on, then pause
-      leds[i] = CRGB::YellowGreen;
-    }
-    FastLED.show();
-    delay(1000);
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Turn the LED on, then pause
-      leds[i] = CRGB::Red;
-    }
-    FastLED.show();
-    delay(1000);
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Turn the LED on, then pause
-      leds[i] = CRGB::Purple;
-    }
-    FastLED.show();
-    delay(1000);
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Turn the LED on, then pause
-      leds[i] = CRGB::Maroon;
-    }
-    FastLED.show();
-    delay(1000);  
-    // Now iterate through the various colors.
-    for (int i = 0; i < NUM_LEDS; i++) {
-      // Turn the LED on, then pause
-      leds[i] = CRGB::Black;
-    }
-    FastLED.show();
-    delay(1000);  
-    // Now do the fast move up
-    for (int j = 0; j < 256; j++) {
-      Serial.println(j);
-      for (int i = NUM_LEDS; i >= 0; i--) {
-        // Turn the LED on, then pause
-        leds[i].setHSV( j, 255, 255);
-        FastLED.show();
-        delay(10);
-      }
-      j = j + 25;
-    }  
+    j = j + 25;
+  }
 }
 
 
@@ -1299,12 +1307,12 @@ void setup()
 #endif
 
     Serial.println(F("SPIFFS/LittleFS failed! Already tried formatting."));
-  
+
     if (!FileFS.begin())
-    {     
+    {
       // prevents debug info from the library to hide err message.
       delay(100);
-      
+
 #if USE_LITTLEFS
       Serial.println(F("LittleFS failed!. Please use SPIFFS or EEPROM. Stay forever"));
 #else
@@ -1317,7 +1325,7 @@ void setup()
       }
     }
   }
-  
+
   loadFileFSConfigFile();
 
   // The extra parameters to be configured (can be either global or just in the setup)
@@ -1404,7 +1412,7 @@ void setup()
     ESPAsync_wifiManager.setConfigPortalTimeout(120); //If no access point name has been previously entered disable timeout.
     Serial.println(F("Got ESP Self-Stored Credentials. Timeout 120s for Config Portal"));
   }
-  
+
   if (loadConfigData())
   {
     configDataLoaded = true;
@@ -1412,22 +1420,22 @@ void setup()
     ESPAsync_wifiManager.setConfigPortalTimeout(120); //If no access point name has been previously entered disable timeout.
     Serial.println(F("Got stored Credentials. Timeout 120s for Config Portal"));
 
-#if USE_ESP_WIFIMANAGER_NTP      
+#if USE_ESP_WIFIMANAGER_NTP
     if ( strlen(WM_config.TZ_Name) > 0 )
     {
       LOGERROR3(F("Current TZ_Name ="), WM_config.TZ_Name, F(", TZ = "), WM_config.TZ);
 
-  #if ESP8266
-      configTime(WM_config.TZ, "pool.ntp.org"); 
-  #else
+#if ESP8266
+      configTime(WM_config.TZ, "pool.ntp.org");
+#else
       //configTzTime(WM_config.TZ, "pool.ntp.org" );
       configTzTime(WM_config.TZ, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
-  #endif   
+#endif
     }
     else
     {
       Serial.println(F("Current Timezone is not set. Enter Config Portal to set."));
-    } 
+    }
 #endif
   }
   else
@@ -1449,8 +1457,8 @@ void setup()
   if (initialConfig)
   {
     Serial.print(F("Starting configuration portal @ "));
-    
-#if USE_CUSTOM_AP_IP    
+
+#if USE_CUSTOM_AP_IP
     Serial.print(APStaticIP);
 #else
     Serial.print(F("192.168.4.1"));
@@ -1502,7 +1510,7 @@ void setup()
       }
     }
 
-#if USE_ESP_WIFIMANAGER_NTP      
+#if USE_ESP_WIFIMANAGER_NTP
     String tempTZ   = ESPAsync_wifiManager.getTimezoneName();
 
     if (strlen(tempTZ.c_str()) < sizeof(WM_config.TZ_Name) - 1)
@@ -1511,18 +1519,18 @@ void setup()
       strncpy(WM_config.TZ_Name, tempTZ.c_str(), sizeof(WM_config.TZ_Name) - 1);
 
     const char * TZ_Result = ESPAsync_wifiManager.getTZ(WM_config.TZ_Name);
-    
+
     if (strlen(TZ_Result) < sizeof(WM_config.TZ) - 1)
       strcpy(WM_config.TZ, TZ_Result);
     else
       strncpy(WM_config.TZ, TZ_Result, sizeof(WM_config.TZ_Name) - 1);
-         
+
     if ( strlen(WM_config.TZ_Name) > 0 )
     {
       LOGERROR3(F("Saving current TZ_Name ="), WM_config.TZ_Name, F(", TZ = "), WM_config.TZ);
 
 #if ESP8266
-      configTime(WM_config.TZ, "pool.ntp.org"); 
+      configTime(WM_config.TZ, "pool.ntp.org");
 #else
       //configTzTime(WM_config.TZ, "pool.ntp.org" );
       configTzTime(WM_config.TZ, "time.nist.gov", "0.pool.ntp.org", "1.pool.ntp.org");
@@ -1577,7 +1585,7 @@ void setup()
   {
 
     Serial.print(F("connected. Local IP: "));
-    Serial.println(WiFi.localIP());   
+    Serial.println(WiFi.localIP());
 
     leds1[0] = CRGB::Green;
     leds2[0] = CRGB::Green;
@@ -1588,8 +1596,8 @@ void setup()
     setupDance();
 
     Serial.println("Timer set to 5 seconds (timerDelay variable), it will take 5 seconds before publishing the first reading.");
-    timerDelay = 5000;  
-  
+    timerDelay = 5000;
+
   }
   else
     Serial.println(ESPAsync_wifiManager.getStatus(WiFi.status()));
@@ -1633,7 +1641,7 @@ void loop()
   Serial.println("millis,  lastTime, timerDelay | END");
   if ((millis() - lastTime) > timerDelay) {
     //Check WiFi connection status
-    if(WiFi.status()== WL_CONNECTED) {
+    if (WiFi.status() == WL_CONNECTED) {
       Serial.println("Loop - WIFI connected -- getting ready to run.");
       aircloudDisplay();
       lastTime = millis();
@@ -1666,10 +1674,10 @@ void loop()
 
 
 void rainbow_wave(uint8_t thisSpeed, uint8_t deltaHue) {     // The fill_rainbow call doesn't support brightness levels.
- 
-// uint8_t thisHue = beatsin8(thisSpeed,0,255);                // A simple rainbow wave.
- uint8_t thisHue = beat8(thisSpeed,255);                     // A simple rainbow march.
-  
- fill_rainbow(leds, NUM_LEDS, thisHue, deltaHue);            // Use FastLED's fill_rainbow routine.
- 
+
+  // uint8_t thisHue = beatsin8(thisSpeed,0,255);                // A simple rainbow wave.
+  uint8_t thisHue = beat8(thisSpeed, 255);                    // A simple rainbow march.
+
+  fill_rainbow(leds, NUM_LEDS, thisHue, deltaHue);            // Use FastLED's fill_rainbow routine.
+
 } // rainbow_wave()
