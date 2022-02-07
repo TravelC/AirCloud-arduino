@@ -908,7 +908,6 @@ void breathe()
 // Don't forget to change this value to match your JSON document.
 // Use arduinojson.org/v6/assistant to compute the capacity.
 StaticJsonDocument<275> doc;
-
 void aircloudDisplay()
 {
   Serial.println("aircloudDisplay - serverNameCombinedDone");
@@ -1019,11 +1018,15 @@ void aircloudDisplay()
     FastLED.show();
     delay(100);
 
-    leds[0] = CRGB::Red;
-    leds[NUM_LEDS - 1] = CRGB::Green;
+    int *digitLeds = ledsForNumber(aircloud_aqi);
+    for (int i = 0; i < 60; i++) {
+      if (digitLeds[i] > 0)
+      {
+        leds[digitLeds[i]] = CRGB::Green;
+      }
+      
+    }
     FastLED.show();
-
-
 
     // Now set a color and after each we show
     //    int count_remaining = aircloud_aqi;
