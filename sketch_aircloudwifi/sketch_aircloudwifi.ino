@@ -1019,12 +1019,10 @@ void aircloudDisplay()
     delay(100);
 
     int *digitLeds = ledsForNumber(aircloud_aqi);
-    for (int i = 0; i < 60; i++) {
-      if (digitLeds[i] > 0)
-      {
-        leds[digitLeds[i]] = CRGB::Green;
-      }
-      
+    Serial.println("digitLeds");
+    for (int i = 0; digitLeds[i] != -1; i++) {
+      Serial.println(String(i) + "==: " + String(digitLeds[i]));
+      leds[digitLeds[i]] = CRGB::Green;
     }
     FastLED.show();
 
